@@ -40,7 +40,7 @@ The project demonstrates:
           Static Website
 ```
 ## Request flow:
-
+```
 Browser
    |
 localhost:8080
@@ -51,10 +51,11 @@ Docker Port Mapping
 Nginx Container
    |
 Static Website Files
-
+```
 ---
 
 ## Project Structure
+```
 devops-fresher-assignment/
 │
 ├── .github/
@@ -76,7 +77,7 @@ devops-fresher-assignment/
 ├── .env.example
 ├── README.md
 └── TROUBLESHOOTING.md
-
+```
 ---
 
 ## Prerequisites
