@@ -1,0 +1,23 @@
+name: Docker CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository  
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose
+        run: docker compose config
+
+      - name: Build Docker image
+        run: docker build -t devops-fresher-app:ci .
+
+      - name: Verify Docker image
+        run: docker image inspect devops-fresher-app:ci
