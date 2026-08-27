@@ -518,6 +518,86 @@ Production Stage
 Nginx Alpine Image
 ```
 
+## Bonus 5 — Docker Registry
+
+For this project, Docker Hub is used as the container registry.
+
+The Docker image is automatically built and pushed to Docker Hub using GitHub Actions.
+
+### Docker Hub Repository
+
+Docker Hub repository:
+`shiprag321/devops-web-app`
+
+Published image:
+`shiprag321/devops-web-app:latest`
+
+### Automated Workflow
+Whenever changes are pushed to the `main` branch, GitHub Actions automatically:
+
+1. Checks out the source code.
+2. Validates the Docker Compose configuration.
+3. Builds the Docker image.
+4. Logs in to Docker Hub using GitHub Secrets.
+5. Pushes the image to Docker Hub.
+6. Deploys the latest image using the self-hosted runner.
+7. Removes the old container and image.
+8. Pulls the latest image from Docker Hub.
+9. Starts the new container.
+10. Waits for the Docker health check.
+11. Verifies that the application is responding successfully.
+
+### Docker Hub Authentication
+Docker Hub credentials are stored securely using GitHub Actions Secrets.
+
+```text
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+```
+
+The Docker Hub access token is never stored directly in the workflow or source code.
+
+### Docker Image
+The image can be pulled from Docker Hub using:
+```
+docker pull shiprag321/devops-web-app:latest
+```
+
+The application can be started using:
+```
+docker run -d \
+  --name devops-web-app \
+  --restart unless-stopped \
+  -p 8080:80 \
+  shiprag321/devops-web-app:latest
+```
+
+Application URL:
+```
+http://localhost:8080
+```
+
+### Deployment Flow
+```
+git push
+    ↓
+GitHub Actions
+    ↓
+Build Docker Image
+    ↓
+Push Image to Docker Hub
+    ↓
+Self-Hosted Runner
+    ↓
+Pull Latest Image
+    ↓
+Start New Container
+    ↓
+Health Check
+    ↓
+Application Verification
+```
+This provides an automated Docker image build, registry push, and deployment process without requiring AWS or any paid cloud service.
 
 ---
 
