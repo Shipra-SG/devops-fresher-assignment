@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: devops-web-app:1.2
+    image: devops-web-app:latest-local
 
     container_name: devops-web-app
 

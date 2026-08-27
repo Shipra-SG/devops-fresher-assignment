@@ -18,10 +18,10 @@ jobs:
         run: docker compose config
 
       - name: Build Docker image
-        run: docker build -t devops-web-app:1.2 .
+        run: docker build -t devops-web-app:latest-local .
 
       - name: Verify Docker image
-        run: docker image inspect devops-web-app:1.2
+        run: docker image inspect devops-web-app:latest-local
 
   deploy:
     name: Deploy Application
@@ -32,25 +32,53 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Stop existing container
-        run: docker compose down
-
-      - name: Build and start application
-        run: docker compose up -d --build
-
-      - name: Wait for health check
-        run: sleep 10
-
-      - name: Verify container is running
-        run: docker ps
-
-      - name: Verify application health
+      - name: Show Docker state before deployment
         run: |
-          STATUS=$(docker inspect --format='{{.State.Health.Status}}' devops-web-app)
-          echo "Container health: $STATUS"
+          echo "===Existing Containers==="
+          docker ps -a
+          echo "===Existing Images==="
+          docker images
 
-          if [ "$STATUS" != "healthy" ]; then
-            echo "Deployment failed: container is not healthy"
-            docker logs devops-web-app
-            exit 1
-          fi
+      - name: Stop and Remove old application
+        run: |
+          docker compose down --remove-orphans || true
+
+      - name: Remove old application image
+        run: |
+          docker image rm devops-web-app:latest:local || true
+
+      - name: Clean unused Docker resources
+        run: |
+          docker container prune -f
+          docker image prune -f
+          docker network prune -f
+
+      - name: Wait for health chec
+        run: |
+          for i in {1..12}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' devops-web-app 2>/dev/null || echo "Starting")
+            echo "Container health: $STATUS"
+
+            if [ "$STATUS" != "healthy" ]; then
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "Deployment failed: container is not healthy"
+          docker logs devops-web-app
+          exit 1
+
+      - name: Verify application response
+        run: |
+          curl --fail --retry 5 --retry-delay 2 http://localhost:8080
+
+      - name: Show final docker state
+        if: always()
+        run: |
+          echo "=== Final containers ==="
+          docker ps -a
+          echo "=== Final images ==="
+          docker images
+
