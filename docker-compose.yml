@@ -3,11 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: devops-web-app:1.1
+    image: devops-web-app:1.2
 
     container_name: devops-web-app
 
     ports:
-      - "${APP_PORT}:80"
+      - "${APP_PORT:-8080}:80"
 
     restart: unless-stopped
