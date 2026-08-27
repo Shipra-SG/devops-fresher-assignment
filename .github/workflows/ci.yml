@@ -6,114 +6,69 @@ on:
       - main
 
 jobs:
-  validate-and-build:
-    name: Validate and Build
+  build:
+    name: Build and Validate
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Validate Docker Compose
         run: docker compose config
 
       - name: Build Docker image
-        run: docker build -t devops-web-app:latest-local .
-
-      - name: Verify Docker image
-        run: docker image inspect devops-web-app:latest-local
+        run: docker build -t devops-web-app:ci .
 
   deploy:
     name: Deploy Application
-    needs: validate-and-build
+    needs: build
     runs-on: self-hosted
 
     env:
       APP_PORT: 8080
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show Docker state before deployment
-        run: |
-          echo "=== Existing Containers ==="
-          docker ps -a
-          echo "=== Existing Images ==="
-          docker images
-
-      - name: Stop and remove old application
-        run: |
-          docker compose down --remove-orphans || true
+      - name: Stop and remove old container
+        run: docker compose down --remove-orphans || true
 
       - name: Remove old application image
-        run: |
-          docker image rm devops-web-app:latest-local || true
-
-      - name: Clean unused Docker resources
-        run: |
-          docker container prune -f
-          docker image prune -f
-          docker network prune -f
+        run: docker image rm devops-web-app:latest-local || true
 
       - name: Build and start new application
-        run: |
-          docker compose up -d --build --force-recreate
+        run: docker compose up -d --build
 
-      - name: Verify port mapping
-        run: |
-          docker ps
-          docker port devops-web-app
-
-      - name: Wait for health check
+      - name: Wait for container health
         run: |
           for i in {1..12}; do
-            STATUS=$(docker inspect -f '{{.State.Health.Status}}' devops-web-app 2>/dev/null || echo "not-found")
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' devops-web-app 2>/dev/null || echo "starting")
 
             echo "Container health: $STATUS"
 
             if [ "$STATUS" = "healthy" ]; then
-              echo "Container is healthy"
+              echo "Deployment successful"
               exit 0
             fi
 
             if [ "$STATUS" = "unhealthy" ]; then
-              echo "Container became unhealthy"
-              docker logs devops-web-app || true
+              echo "Container is unhealthy"
+              docker logs devops-web-app
               exit 1
             fi
 
             sleep 5
           done
 
-          echo "Timed out waiting for healthy container"
-          docker ps -a
+          echo "Container did not become healthy"
           docker logs devops-web-app || true
           exit 1
 
-      - name: Verify application response
-        run: |
-          for i in {1..10}; do
-            if curl -fsS http://localhost:8080 > /dev/null; then
-              echo "Application is responding successfully"
-              exit 0
-            fi
+      - name: Verify application
+        run: curl -f http://localhost:8080
 
-            echo "Waiting for application..."
-            sleep 3
-          done
-
-          echo "Application is not reachable on localhost:8080"
-          docker ps -a
-          docker port devops-web-app || true
-          docker logs devops-web-app || true
-          exit 1
-
-      - name: Show final Docker state
+      - name: Clean unused Docker images
         if: always()
-        run: |
-          echo "=== Final Containers ==="
-          docker ps -a
-          echo "=== Final Images ==="
-          docker images
-
+        run: docker image prune -f
