@@ -257,6 +257,11 @@ Containers have their own isolated networking environment.
 Port mapping allows traffic from the host machine to reach the application running inside the container.
 If the host port is already being used, Docker cannot start the container with the same port mapping.
 
+### Website Running
+![Website Running](screenshots/website.png)
+
+
+
 ---
 
 ## Environment Variables
@@ -295,6 +300,9 @@ Add basic security headers.
 Enable gzip compression.
 Cache static files.
 
+### Custom 404 Page
+![Custom 404 Page](screenshots/404-page.png)
+
 ### Security Headers
 
 X-Content-Type-Options
@@ -314,6 +322,8 @@ Referrer-Policy
 strict-origin-when-cross-origin
 ```
 Controls how much referrer information is sent with requests
+
+![Nginx Security Headers](screenshots/security-headers.png)
 
 ---
 
@@ -342,6 +352,8 @@ http://127.0.0.1/
 ```
 
 If a container becomes unhealthy, Docker marks the container health status as unhealthy. The container may still be running, but monitoring systems or orchestration platforms can use this status to trigger alerts or recovery actions.
+
+![Docker Container Healthy](screenshots/docker-healthy.png)
 
 ---
 
@@ -385,6 +397,8 @@ The pipeline performs:
 - Docker Compose validation.
 - Docker image build.
 - Docker image verification.
+
+![GitHub Actions Successful Run](screenshots/github-actions.png)
 
 ---
 
@@ -496,6 +510,9 @@ docker images
 docker history devops-web-app:latest-local
 ```
 
+![Docker Image History](screenshots/docker-image-history.png)
+
+
 ## Bonus 2: Multi-Stage Docker Build
 
 The Dockerfile uses a multi-stage build.
@@ -599,6 +616,8 @@ Application Verification
 ```
 This provides an automated Docker image build, registry push, and deployment process without requiring AWS or any paid cloud service.
 
+![Docker Hub Repository](screenshots/dockerhub.png)
+
 ---
 
 ## Troubleshooting
@@ -609,25 +628,11 @@ TROUBLESHOOTING.md
 ```
 
 The following scenarios are covered:
-
 - Port already in use.
 - Container keeps restarting.
 -  Nginx returns 403 Forbidden.
 - Docker image is very large.
 - Website works inside the container but not in the browser.
-
----
-
-## Screenshots
-
-The following screenshots demonstrate the project:
-
--  Docker container running.
-- Docker health check showing healthy.
-- Website running at localhost:8080.
-- Custom 404 page.
-- Nginx security headers.
-- GitHub Actions CI pipeline successful.
 
 ---
 
