@@ -5,4 +5,7 @@
 .env.*
 README.md
 TROUBLESHOOTING.md
+actions-runner/
+_work/
 *.log
+*.tar.gz

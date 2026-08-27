@@ -479,6 +479,25 @@ Secrets should never be stored in GitHub repositories because repository history
 
 ---
 
+## Bonus 1: Docker Image Optimization
+
+The Docker image was optimized using the following practices:
+
+- Used `nginx:alpine` as a lightweight base image.
+- Used `.dockerignore` to exclude unnecessary files from the Docker build context.
+- Excluded Git files, environment files, logs, documentation files, and the local GitHub Actions runner directory.
+- Copied only the required Nginx configuration and static website files into the image.
+- Avoided installing unnecessary packages.
+
+The image was inspected using:
+
+```bash
+docker images
+docker history devops-web-app:latest-local
+```
+
+---
+
 ## Troubleshooting
 
 Detailed troubleshooting scenarios are documented in:
