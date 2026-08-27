@@ -28,30 +28,42 @@ jobs:
     needs: validate-and-build
     runs-on: self-hosted
 
+    env:
+      APP_PORT: 8080
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Show Docker state before deployment
         run: |
-          echo "===Existing Containers==="
+          echo "=== Existing Containers ==="
           docker ps -a
-          echo "===Existing Images==="
+          echo "=== Existing Images ==="
           docker images
 
-      - name: Stop and Remove old application
+      - name: Stop and remove old application
         run: |
           docker compose down --remove-orphans || true
 
       - name: Remove old application image
         run: |
-          docker image rm devops-web-app:latest:local || true
+          docker image rm devops-web-app:latest-local || true
 
       - name: Clean unused Docker resources
         run: |
           docker container prune -f
           docker image prune -f
           docker network prune -f
+
+      - name: Build and start new application
+        run: |
+          docker compose up -d --build --force-recreate
+
+      - name: Verify port mapping
+        run: |
+          docker ps
+          docker port devops-web-app
 
       - name: Wait for health check
         run: |
@@ -81,13 +93,27 @@ jobs:
 
       - name: Verify application response
         run: |
-          curl --fail --retry 5 --retry-delay 2 http://localhost:8080
+          for i in {1..10}; do
+            if curl -fsS http://localhost:8080 > /dev/null; then
+              echo "Application is responding successfully"
+              exit 0
+            fi
 
-      - name: Show final docker state
+            echo "Waiting for application..."
+            sleep 3
+          done
+
+          echo "Application is not reachable on localhost:8080"
+          docker ps -a
+          docker port devops-web-app || true
+          docker logs devops-web-app || true
+          exit 1
+
+      - name: Show final Docker state
         if: always()
         run: |
-          echo "=== Final containers ==="
+          echo "=== Final Containers ==="
           docker ps -a
-          echo "=== Final images ==="
+          echo "=== Final Images ==="
           docker images
 
