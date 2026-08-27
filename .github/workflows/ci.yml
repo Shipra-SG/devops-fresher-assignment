@@ -53,21 +53,30 @@ jobs:
           docker image prune -f
           docker network prune -f
 
-      - name: Wait for health chec
+      - name: Wait for health check
         run: |
           for i in {1..12}; do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' devops-web-app 2>/dev/null || echo "Starting")
+            STATUS=$(docker inspect -f '{{.State.Health.Status}}' devops-web-app 2>/dev/null || echo "not-found")
+
             echo "Container health: $STATUS"
 
-            if [ "$STATUS" != "healthy" ]; then
+            if [ "$STATUS" = "healthy" ]; then
+              echo "Container is healthy"
               exit 0
+            fi
+
+            if [ "$STATUS" = "unhealthy" ]; then
+              echo "Container became unhealthy"
+              docker logs devops-web-app || true
+              exit 1
             fi
 
             sleep 5
           done
 
-          echo "Deployment failed: container is not healthy"
-          docker logs devops-web-app
+          echo "Timed out waiting for healthy container"
+          docker ps -a
+          docker logs devops-web-app || true
           exit 1
 
       - name: Verify application response
