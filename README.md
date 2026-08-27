@@ -496,6 +496,29 @@ docker images
 docker history devops-web-app:latest-local
 ```
 
+## Bonus 2: Multi-Stage Docker Build
+
+The Dockerfile uses a multi-stage build.
+
+### Stage 1: Builder
+
+The first stage prepares the static application files.
+
+### Stage 2: Production
+
+The second stage uses a lightweight Nginx Alpine image and copies only the required application files from the builder stage.
+
+```text
+Builder Stage
+     ↓
+Prepare Static Files
+     ↓
+Production Stage
+     ↓
+Nginx Alpine Image
+```
+
+
 ---
 
 ## Troubleshooting
