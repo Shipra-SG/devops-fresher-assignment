@@ -1,4 +1,4 @@
-name: Docker CI Pipeline
+name: Docker CI/CD Pipeline
 
 on:
   push:
@@ -7,17 +7,50 @@ on:
 
 jobs:
   validate-and-build:
+    name: Validate and Build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository  
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Validate Docker Compose
         run: docker compose config
 
       - name: Build Docker image
-        run: docker build -t devops-fresher-app:ci .
+        run: docker build -t devops-web-app:1.2 .
 
       - name: Verify Docker image
-        run: docker image inspect devops-fresher-app:ci
+        run: docker image inspect devops-web-app:1.2
+
+  deploy:
+    name: Deploy Application
+    needs: validate-and-build
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Stop existing container
+        run: docker compose down
+
+      - name: Build and start application
+        run: docker compose up -d --build
+
+      - name: Wait for health check
+        run: sleep 10
+
+      - name: Verify container is running
+        run: docker ps
+
+      - name: Verify application health
+        run: |
+          STATUS=$(docker inspect --format='{{.State.Health.Status}}' devops-web-app)
+          echo "Container health: $STATUS"
+
+          if [ "$STATUS" != "healthy" ]; then
+            echo "Deployment failed: container is not healthy"
+            docker logs devops-web-app
+            exit 1
+          fi
